@@ -50,6 +50,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resultImageBase64, setResultImageBase64] = useState<string | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const handleProductChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -95,6 +96,7 @@ function App() {
 
     setIsLoading(true);
     setError(null);
+    setIsPreviewOpen(false);
 
     try {
       const base64 = await generateAdImage({
@@ -204,11 +206,36 @@ function App() {
             </div>
           </div>
           <div className="result-actions">
+            <button type="button" onClick={() => setIsPreviewOpen(true)}>
+              Preview Image
+            </button>
             <a href={`data:image/png;base64,${resultImageBase64}`} download="ad-image.png">
               Download Image
             </a>
           </div>
         </section>
+      )}
+
+      {isPreviewOpen && resultImageBase64 && (
+        <div
+          className="preview-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Generated image preview"
+          onClick={() => setIsPreviewOpen(false)}
+        >
+          <div className="preview-dialog" onClick={(event) => event.stopPropagation()}>
+            <button
+              className="preview-close"
+              type="button"
+              aria-label="Close preview"
+              onClick={() => setIsPreviewOpen(false)}
+            >
+              ×
+            </button>
+            <img src={`data:image/png;base64,${resultImageBase64}`} alt="Generated ad preview" />
+          </div>
+        </div>
       )}
     </main>
   );
