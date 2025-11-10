@@ -56,7 +56,7 @@ function App() {
     const files = event.target.files;
     try {
       const images = await prepareImages(files);
-      setProductImages(reindexImages(images));
+      setProductImages((prev) => reindexImages([...prev, ...images]));
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to process product images.');
@@ -69,7 +69,7 @@ function App() {
     const files = event.target.files;
     try {
       const images = await prepareImages(files);
-      setStyleImages(reindexImages(images));
+      setStyleImages((prev) => reindexImages([...prev, ...images]));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to process style images.');
     } finally {
