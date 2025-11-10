@@ -49,11 +49,36 @@ p.lead {
   gap: 1rem;
 }
 
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .section-card h2 {
   margin: 0;
   font-size: 1.2rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+}
+
+.clear-btn {
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: transparent;
+  color: #f7f7f7;
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.clear-btn:hover {
+  border-color: #fff;
+  color: #fff;
 }
 
 input[type='file'] {
@@ -94,6 +119,7 @@ textarea:focus {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
+  position: relative;
 }
 
 .image-card img {
@@ -101,6 +127,30 @@ textarea:focus {
   aspect-ratio: 1;
   object-fit: cover;
   border-radius: 12px;
+}
+
+.image-delete {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(5, 6, 10, 0.6);
+  color: #f7f7f7;
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.image-delete:hover {
+  background: rgba(255, 107, 107, 0.9);
+  color: #05060a;
 }
 
 .image-label {

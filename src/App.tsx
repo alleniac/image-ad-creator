@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { generateAdImage, type GeminiImageInput } from './lib/geminiNanoImage';
 
-type UploadedImage = GeminiImageInput & {
+export type UploadedImage = GeminiImageInput & {
   file: File;
 };
 
@@ -37,8 +37,11 @@ const prepareImages = async (fileList: FileList | null): Promise<UploadedImage[]
   );
 };
 
-const toGeminiPayload = (images: UploadedImage[]): GeminiImageInput[] =>
+export const toGeminiPayload = (images: UploadedImage[]): GeminiImageInput[] =>
   images.map(({ index, base64, mimeType }) => ({ index, base64, mimeType }));
+
+export const reindexImages = (images: UploadedImage[]): UploadedImage[] =>
+  images.map((image, idx) => ({ ...image, index: idx + 1 }));
 
 function App() {
   const [productImages, setProductImages] = useState<UploadedImage[]>([]);
@@ -52,7 +55,7 @@ function App() {
     const files = event.target.files;
     try {
       const images = await prepareImages(files);
-      setProductImages(images);
+      setProductImages(reindexImages(images));
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to process product images.');
@@ -65,13 +68,24 @@ function App() {
     const files = event.target.files;
     try {
       const images = await prepareImages(files);
-      setStyleImages(images);
+      setStyleImages(reindexImages(images));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to process style images.');
     } finally {
       event.target.value = '';
     }
   };
+
+  const removeProductImage = (index: number) => {
+    setProductImages((prev) => reindexImages(prev.filter((image) => image.index !== index)));
+  };
+
+  const removeStyleImage = (index: number) => {
+    setStyleImages((prev) => reindexImages(prev.filter((image) => image.index !== index)));
+  };
+
+  const clearProductImages = () => setProductImages([]);
+  const clearStyleImages = () => setStyleImages([]);
 
   const handleGenerate = async () => {
     if (!productImages.length) {
@@ -96,27 +110,39 @@ function App() {
     }
   };
 
-const renderImages = (images: UploadedImage[], labelPrefix: string) => {
-  if (!images.length) {
-    return null;
-  }
+  const renderImages = (
+    images: UploadedImage[],
+    labelPrefix: string,
+    onRemove: (index: number) => void,
+  ) => {
+    if (!images.length) {
+      return null;
+    }
 
-  return (
-    <div className="image-grid image-grid--compact">
-      {images.map((image) => (
-        <div className="image-card" key={`${labelPrefix}-${image.index}`}>
-          <img
-            src={`data:${image.mimeType};base64,${image.base64}`}
-            alt={`${labelPrefix} #${image.index}`}
-          />
-          <span className="image-label">
-            {labelPrefix} #{image.index}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-};
+    return (
+      <div className="image-grid image-grid--compact">
+        {images.map((image) => (
+          <div className="image-card" key={`${labelPrefix}-${image.index}`}>
+            <button
+              className="image-delete"
+              type="button"
+              aria-label={`Remove ${labelPrefix} #${image.index}`}
+              onClick={() => onRemove(image.index)}
+            >
+              ×
+            </button>
+            <img
+              src={`data:${image.mimeType};base64,${image.base64}`}
+              alt={`${labelPrefix} #${image.index}`}
+            />
+            <span className="image-label">
+              {labelPrefix} #{image.index}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <main className="app-shell">
@@ -128,15 +154,29 @@ const renderImages = (images: UploadedImage[], labelPrefix: string) => {
       </header>
 
       <section className="section-card">
-        <h2>Product Images · required</h2>
+        <div className="section-heading">
+          <h2>Product Images · required</h2>
+          {productImages.length > 0 && (
+            <button type="button" className="clear-btn" onClick={clearProductImages}>
+              Remove all
+            </button>
+          )}
+        </div>
         <input type="file" onChange={handleProductChange} multiple accept="image/*" />
-        {renderImages(productImages, 'Product')}
+        {renderImages(productImages, 'Product', removeProductImage)}
       </section>
 
       <section className="section-card">
-        <h2>Style References · optional</h2>
+        <div className="section-heading">
+          <h2>Style References · optional</h2>
+          {styleImages.length > 0 && (
+            <button type="button" className="clear-btn" onClick={clearStyleImages}>
+              Remove all
+            </button>
+          )}
+        </div>
         <input type="file" onChange={handleStyleChange} multiple accept="image/*" />
-        {renderImages(styleImages, 'Style')}
+        {renderImages(styleImages, 'Style', removeStyleImage)}
       </section>
 
       <section className="section-card">
