@@ -96,27 +96,27 @@ function App() {
     }
   };
 
-  const renderImages = (images: UploadedImage[], label: 'Product' | 'Style') => {
-    if (!images.length) {
-      return null;
-    }
+const renderImages = (images: UploadedImage[], labelPrefix: string) => {
+  if (!images.length) {
+    return null;
+  }
 
-    return (
-      <div className="image-grid">
-        {images.map((image) => (
-          <div className="image-card" key={`${label}-${image.index}`}>
-            <img
-              src={`data:${image.mimeType};base64,${image.base64}`}
-              alt={`${label} #${image.index}`}
-            />
-            <span>
-              {label} #{image.index}
-            </span>
-          </div>
-        ))}
-      </div>
-    );
-  };
+  return (
+    <div className="image-grid image-grid--compact">
+      {images.map((image) => (
+        <div className="image-card" key={`${labelPrefix}-${image.index}`}>
+          <img
+            src={`data:${image.mimeType};base64,${image.base64}`}
+            alt={`${labelPrefix} #${image.index}`}
+          />
+          <span className="image-label">
+            {labelPrefix} #{image.index}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};
 
   return (
     <main className="app-shell">
@@ -157,7 +157,12 @@ function App() {
       {resultImageBase64 && (
         <section className="result-card">
           <h2>Result</h2>
-          <img src={`data:image/png;base64,${resultImageBase64}`} alt="Generated ad" />
+          <div className="image-grid image-grid--compact">
+            <div className="image-card">
+              <img src={`data:image/png;base64,${resultImageBase64}`} alt="Generated ad" />
+              <span className="image-label">Generated Image</span>
+            </div>
+          </div>
           <div className="result-actions">
             <a href={`data:image/png;base64,${resultImageBase64}`} download="ad-image.png">
               Download Image
