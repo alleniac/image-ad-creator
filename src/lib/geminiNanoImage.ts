@@ -1,5 +1,3 @@
-import { GoogleGenAI, type GenerateContentConfig } from '@google/genai';
-
 export type GeminiImageInput = {
   index: number;
   base64: string;
@@ -18,9 +16,10 @@ export type GenerateAdImageParams = {
 };
 
 const FLASH_MODEL_ID = 'models/gemini-2.5-flash-image';
-const GEMINI_3_MODEL_ID = 'gemini-3-pro-image-preview';
+const GEMINI_3_MODEL_ID = 'models/gemini-3-pro-image-preview';
 const API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
 const DEFAULT_ASPECT_RATIO = '1:1';
+const GEMINI_3_IMAGE_SIZE = '2K';
 
 const mapInlineParts = (images: GeminiImageInput[]) =>
   [...images]
@@ -118,34 +117,32 @@ const generateWithGemini3 = async (
   apiKey: string,
   aspectRatio: string,
 ): Promise<string> => {
-  try {
-    const client = new GoogleGenAI({ apiKey });
-    type Gemini3GenerateContentConfig = GenerateContentConfig & {
-      imageConfig?: {
-        aspectRatio?: string;
-        imageSize?: string;
-      };
-    };
-
-    const gemini3Config: Gemini3GenerateContentConfig = {
+  const requestBody = {
+    contents: buildContents(parts),
+    generationConfig: {
       imageConfig: {
         aspectRatio,
+        imageSize: GEMINI_3_IMAGE_SIZE,
       },
-    };
+    },
+  };
 
-    const response = (await client.models.generateContent({
-      model: GEMINI_3_MODEL_ID,
-      contents: buildContents(parts),
-      config: gemini3Config,
-    })) as GeminiGenerateContentResponse;
+  const response = await fetch(`${API_BASE_URL}/${GEMINI_3_MODEL_ID}:generateContent?key=${apiKey}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(requestBody),
+  });
 
-    const data = extractImageBase64(response);
-    if (data) {
-      return data;
-    }
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to reach Gemini 3.';
-    throw new Error(message);
+  const payload = (await response.json()) as GeminiGenerateContentResponse;
+  if (!response.ok) {
+    throw new Error(payload?.error?.message ?? 'Failed to generate an image.');
+  }
+
+  const data = extractImageBase64(payload);
+  if (data) {
+    return data;
   }
 
   throw new Error('Gemini 3 did not return an image. Please try again.');
