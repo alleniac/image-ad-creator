@@ -1,5 +1,9 @@
 import { useState } from 'react';
-import { generateAdImage, type GeminiImageInput } from './lib/geminiNanoImage';
+import {
+  generateAdImage,
+  type GeminiImageInput,
+  type GeminiModelVariant,
+} from './lib/geminiNanoImage';
 
 export type UploadedImage = GeminiImageInput & {
   file: File;
@@ -47,6 +51,7 @@ function App() {
   const [productImages, setProductImages] = useState<UploadedImage[]>([]);
   const [styleImages, setStyleImages] = useState<UploadedImage[]>([]);
   const [prompt, setPrompt] = useState('');
+  const [modelVariant, setModelVariant] = useState<GeminiModelVariant>('gemini-2.5');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resultImageBase64, setResultImageBase64] = useState<string | null>(null);
@@ -103,6 +108,7 @@ function App() {
         prompt,
         productImages: toGeminiPayload(productImages),
         styleImages: toGeminiPayload(styleImages),
+        modelVariant,
       });
       setResultImageBase64(base64);
     } catch (err) {
@@ -151,9 +157,48 @@ function App() {
       <header>
         <h1>Gemini Ad Canvas</h1>
         <p className="lead">
-          Upload your product assets, set the vibe, and let Gemini 2.5 Flash Image craft an ad-ready visual.
+          Upload your product assets, set the vibe, and pick between Gemini 2.5 Flash Image or Gemini 3 Nano Banana Pro to craft an ad-ready visual.
         </p>
       </header>
+
+      <section className="section-card">
+        <div className="section-heading">
+          <h2>Model</h2>
+          <span className="tag">New · Gemini 3 ready</span>
+        </div>
+        <div className="model-options">
+          <label className={`model-option ${modelVariant === 'gemini-2.5' ? 'model-option--active' : ''}`}>
+            <input
+              type="radio"
+              name="model-choice"
+              value="gemini-2.5"
+              checked={modelVariant === 'gemini-2.5'}
+              onChange={() => setModelVariant('gemini-2.5')}
+            />
+            <div className="model-copy">
+              <div className="model-title">
+                Gemini 2.5 Flash Image <span className="pill">Speed</span>
+              </div>
+              <p>Fastest turnarounds with stable ad-quality renders.</p>
+            </div>
+          </label>
+          <label className={`model-option ${modelVariant === 'gemini-3' ? 'model-option--active' : ''}`}>
+            <input
+              type="radio"
+              name="model-choice"
+              value="gemini-3"
+              checked={modelVariant === 'gemini-3'}
+              onChange={() => setModelVariant('gemini-3')}
+            />
+            <div className="model-copy">
+              <div className="model-title">
+                Gemini 3 Nano Banana Pro <span className="pill pill--accent">New</span>
+              </div>
+              <p>Highest fidelity previews powered by Gemini 3&apos;s image generation.</p>
+            </div>
+          </label>
+        </div>
+      </section>
 
       <section className="section-card">
         <div className="section-heading">
