@@ -179,3 +179,14 @@ export async function generateAdImage({
 
   return generateWithFlash(parts, apiKey, aspectRatio);
 }
+
+export async function generateMultipleAdImages(
+  params: GenerateAdImageParams,
+  count = 3,
+): Promise<string[]> {
+  if (count <= 0) {
+    return [];
+  }
+  const tasks = Array.from({ length: count }, () => generateAdImage(params));
+  return Promise.all(tasks);
+}

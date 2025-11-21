@@ -3,6 +3,7 @@ import {
   generateAdImage,
   type GeminiImageInput,
   type GeminiModelVariant,
+  generateMultipleAdImages,
 } from './lib/geminiNanoImage';
 
 export type UploadedImage = GeminiImageInput & {
@@ -54,8 +55,8 @@ function App() {
   const [modelVariant, setModelVariant] = useState<GeminiModelVariant>('gemini-2.5');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [resultImageBase64, setResultImageBase64] = useState<string | null>(null);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [resultImages, setResultImages] = useState<string[]>([]);
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
 
   const handleProductChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -101,16 +102,20 @@ function App() {
 
     setIsLoading(true);
     setError(null);
-    setIsPreviewOpen(false);
+    setResultImages([]);
+    setPreviewIndex(null);
 
     try {
-      const base64 = await generateAdImage({
-        prompt,
-        productImages: toGeminiPayload(productImages),
-        styleImages: toGeminiPayload(styleImages),
-        modelVariant,
-      });
-      setResultImageBase64(base64);
+      const base64Images = await generateMultipleAdImages(
+        {
+          prompt,
+          productImages: toGeminiPayload(productImages),
+          styleImages: toGeminiPayload(styleImages),
+          modelVariant,
+        },
+        3,
+      );
+      setResultImages(base64Images);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate an image.');
     } finally {
@@ -157,7 +162,7 @@ function App() {
       <header>
         <h1>Gemini Ad Canvas</h1>
         <p className="lead">
-          Upload your product assets, set the vibe, and pick between Gemini 2.5 Flash Image or Gemini 3 Nano Banana Pro to craft an ad-ready visual.
+          Upload your product assets, set the vibe, and pick between Gemini 2.5 Flash Image or Gemini 3 Nano Banana Pro to craft ad-ready visuals. We generate three variants in parallel for you to choose from.
         </p>
       </header>
 
@@ -241,44 +246,52 @@ function App() {
 
       {error && <div className="status-text">{error}</div>}
 
-      {resultImageBase64 && (
+      {resultImages.length > 0 && (
         <section className="result-card">
-          <h2>Result</h2>
-          <div className="image-grid image-grid--compact">
-            <div className="image-card">
-              <img src={`data:image/png;base64,${resultImageBase64}`} alt="Generated ad" />
-              <span className="image-label">Generated Image</span>
-            </div>
+          <div className="section-heading">
+            <h2>Results</h2>
+            <span className="tag">3 variants</span>
           </div>
-          <div className="result-actions">
-            <button type="button" onClick={() => setIsPreviewOpen(true)}>
-              Preview Image
-            </button>
-            <a href={`data:image/png;base64,${resultImageBase64}`} download="ad-image.png">
-              Download Image
-            </a>
+          <div className="image-grid image-grid--compact">
+            {resultImages.map((imageBase64, idx) => (
+              <div className="image-card" key={`result-${idx}`}>
+                <img src={`data:image/png;base64,${imageBase64}`} alt={`Generated ad #${idx + 1}`} />
+                <span className="image-label">Generated #{idx + 1}</span>
+                <div className="result-actions">
+                  <button type="button" onClick={() => setPreviewIndex(idx)}>
+                    Preview
+                  </button>
+                  <a href={`data:image/png;base64,${imageBase64}`} download={`ad-image-${idx + 1}.png`}>
+                    Download
+                  </a>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
       )}
 
-      {isPreviewOpen && resultImageBase64 && (
+      {previewIndex !== null && resultImages[previewIndex] && (
         <div
           className="preview-overlay"
           role="dialog"
           aria-modal="true"
           aria-label="Generated image preview"
-          onClick={() => setIsPreviewOpen(false)}
+          onClick={() => setPreviewIndex(null)}
         >
           <div className="preview-dialog" onClick={(event) => event.stopPropagation()}>
             <button
               className="preview-close"
               type="button"
               aria-label="Close preview"
-              onClick={() => setIsPreviewOpen(false)}
+              onClick={() => setPreviewIndex(null)}
             >
               ×
             </button>
-            <img src={`data:image/png;base64,${resultImageBase64}`} alt="Generated ad preview" />
+            <img
+              src={`data:image/png;base64,${resultImages[previewIndex]}`}
+              alt={`Generated ad preview #${previewIndex + 1}`}
+            />
           </div>
         </div>
       )}

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { generateAdImage } from '../lib/geminiNanoImage';
+import { generateAdImage, generateMultipleAdImages } from '../lib/geminiNanoImage';
 import type { GeminiImageInput } from '../lib/geminiNanoImage';
 
 const originalFetch = globalThis.fetch;
@@ -68,5 +68,34 @@ describe('model selection', () => {
       aspectRatio: '1:1',
       imageSize: '2K',
     });
+  });
+
+  it('fires three API calls concurrently when requesting multiple images', async () => {
+    let callCount = 0;
+    const fetchMock = vi.fn().mockImplementation(() => {
+      callCount += 1;
+      const data = `img-${callCount}`;
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          candidates: [{ content: { parts: [{ inlineData: { data } }] } }],
+        }),
+      });
+    });
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+    const results = await generateMultipleAdImages(
+      {
+        prompt: 'batch',
+        productImages: [productImage],
+        styleImages: [],
+        modelVariant: 'gemini-3',
+        apiKeyOverride: 'test-key',
+      },
+      3,
+    );
+
+    expect(results).toEqual(['img-1', 'img-2', 'img-3']);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 });
