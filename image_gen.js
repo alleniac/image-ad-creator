@@ -1,3 +1,7 @@
+/**
+ * Update 20251121 --
+ * This JavaScript file was supposed to be a reference / code sample for Codex to learn and was hand-coded by myself. I forgot this completely when making the repo public, therefore leaked the API key by mistake. The key has been disabled in Google Cloud Console. 
+ */
 import { GoogleGenAI } from "@google/genai";
 import * as fs from "node:fs";
 
